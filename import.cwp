@@ -1,0 +1,34 @@
+Import				::=	#implicitCopy
+					#ignore(spaces) [Statement]+
+					-> #empty #continue #empty
+;
+
+Statement			::=	NewFile | AlreadyImportedFile | -> '\n'
+;
+
+NewFile				::=	#explicitCopy #readText("@import") #readCString:file
+					!#check(findElement(file, this.import))
+  					 [  #check(existFile(file))
+					    CppizeFile(file)
+					    => pushItem this.tmpToClean = file + ".kcp";
+					    #parsedFile(file + ".kcp")
+					    Import
+					    => removeElement(this.import, file);
+					    => removeElement(this.import, file + ".kcp");
+					  |
+					     => error("Cannot read " + file);
+					 ]
+;
+
+AlreadyImportedFile		::=	#explicitCopy #readText("@import") #readCString
+;
+
+CppizeFile(file : value)	::=	=> {
+						local theError;
+						theError = system("cpp " + file + " > " + file + ".kcp");
+						if (theError)
+						  error(theError);
+						pushItem this.import[file];
+						pushItem this.import[file + ".kcp"];
+					   }
+;

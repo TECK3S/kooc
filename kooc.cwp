@@ -1,0 +1,34 @@
+#include "cnorm.cwp"
+
+#overload
+translation_unit			::=	#ignore
+						=> cnormNodeRoot(this);
+						[
+							kooc_declarations(this)
+							| declaration(this)
+						]*
+						#continue
+						#empty
+;
+
+kooc_declarations(the_node : node)	::=	module_decl(the_node)
+			     			| implementation_decl(the_node)
+;
+
+implementation_decl(the_node : node)	::=	#readText("@implementation")
+			       			#readIdentifier:impl
+						'{'
+						=> cnormNodeRoot(#evaluateVariable("the_node.mod_" + impl));
+						[ declaration(#evaluateVariable("the_node.mod_" + impl)) ]*
+						'}'
+						=> traceLine("Implementation " + impl + " lu!");
+;
+
+module_decl(the_node : node)		::=	#readText("@module")
+			     			#readIdentifier:mod
+			     			'{'
+						=> cnormNodeRoot(#evaluateVariable("the_node.mod_" + mod));
+						[ declaration(#evaluateVariable("the_node.mod_" + mod)) ]*
+						'}'
+						=> traceLine("Module " + mod + " lu!");
+;

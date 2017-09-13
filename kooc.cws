@@ -1,0 +1,16 @@
+/*
+** kooc.cws for <KOOC> in /home/barrau_a//codeworker/koockie
+** 
+** Made by adrien barrau
+** Login   <barrau_a@epitech.net>
+** 
+** Started on  Thu Jul 14 13:16:37 2011 adrien barrau
+   Last update Thu Jul 14 13:36:33 2011 adrien barrau
+*/
+
+#include "kooc.inc.cws"
+
+foreach arg in _ARGS
+{
+	kooc(arg);
+}

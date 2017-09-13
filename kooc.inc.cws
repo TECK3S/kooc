@@ -1,0 +1,74 @@
+/*
+** kooc.inc.cws for <KOOC> in /home/barrau_a//codeworker/koockie
+** 
+** Made by adrien barrau
+** Login   <barrau_a@epitech.net>
+** 
+** Started on  Thu Jul 14 13:16:23 2011 adrien barrau
+** Last update Fri Jul 15 19:46:50 2011 adrien barrau
+*/
+
+#include "cnorm.inc.cws"
+#include "cnorm2c/cnorm2c.inc.cws"
+
+declare function kooc(fileName : value);
+declare function importAll(fileName : value, importedFileName : node, tmpToClean : node);
+declare function cleanTmpFiles(tmpToClean : node);
+
+function kooc(fileName : value)
+{
+  local importedFileName;
+  local koocAst;
+  local tmpToClean;
+
+  importAll(fileName, importedFileName, tmpToClean);
+  cleanTmpFiles(tmpToClean);
+
+  cnormDialect<"__std__">(koocAst);
+  parseAsBNF("kooc.cwp", koocAst, importedFileName);
+
+  if (findString(fileName, ".kh") != -1)
+    {
+      saveToFile(replaceString(".kh", ".h", fileName), cnorm2c(koocAst));
+    }
+  else if (findString(fileName, ".kc") != -1)
+    {
+      saveToFile(replaceString(".kc", ".c", fileName), cnorm2c(koocAst));
+    }
+  else
+    {
+      saveToFile(fileName + ".c", cnorm2c(koocAst));
+    }
+  pushItem tmpToClean = importedFileName;
+  cleanTmpFiles(tmpToClean);
+}
+
+function importAll(fileName : value, importedFileName : node, tmpToClean : node)
+{
+  local	importAst;
+  local	theError;
+  
+  theError = system("cpp " + fileName + " > " + fileName + ".kcp");
+  if (theError)
+    error(theError);
+  pushItem importAst.import[fileName];
+  pushItem importAst.import[fileName + ".ktmp"];
+  pushItem importAst.import[fileName + ".kcp"];
+  pushItem tmpToClean = fileName + ".kcp";
+  translate("./import.cwp", importAst, fileName + ".kcp", fileName + ".ktmp");
+  foreach tmp in importAst.tmpToClean
+  {
+    pushItem tmpToClean = tmp;
+  }
+  importedFileName = fileName + ".ktmp";
+}
+
+function cleanTmpFiles(tmpToClean : node)
+{
+  foreach file in tmpToClean
+  {
+    if (!deleteFile(file))
+      traceLine("./kooc : Cannot remove " + file);
+  }
+  removeAllElements(tmpToClean);
+}
